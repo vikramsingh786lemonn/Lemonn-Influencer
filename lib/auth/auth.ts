@@ -106,6 +106,11 @@ const FIREBASE_ERRORS: Record<string, string> = {
 function humanise(e: unknown, fallback: string): Error {
   const code = (e as { code?: string })?.code ?? '';
   const raw = e instanceof Error ? e.message : String(e ?? '');
+
+  if (typeof console !== 'undefined') {
+    console.warn('[auth]', code || 'no-code', '|', raw, '| project:', firebaseConfig.projectId);
+  }
+
   if (FIREBASE_ERRORS[code]) return new Error(FIREBASE_ERRORS[code]);
   if (code || raw.startsWith('Firebase:')) return new Error(fallback);
   return new Error(raw || fallback);

@@ -111,6 +111,15 @@ function humanise(e: unknown, fallback: string): Error {
     console.warn('[auth]', code || 'no-code', '|', raw, '| project:', firebaseConfig.projectId);
   }
 
+  /* operation-not-allowed covers two very different causes: the Phone provider
+     being switched off, and the SMS region policy blocking the destination. Only
+     the raw message tells them apart, and the difference matters — one is a
+     project misconfiguration, the other is a legitimate refusal to text that
+     country. */
+  if (code === 'auth/operation-not-allowed' && /region/i.test(raw)) {
+    return new Error('Phone sign-in is not available in this region yet.');
+  }
+
   if (FIREBASE_ERRORS[code]) return new Error(FIREBASE_ERRORS[code]);
   if (code || raw.startsWith('Firebase:')) return new Error(fallback);
   return new Error(raw || fallback);

@@ -42,3 +42,6 @@ yarn-error.log*
 
 # editor / tooling (matches the existing .vscode rule)
 .claude
+
+# internal npm proxy — machine-specific, breaks CI that cannot reach it
+.npmrc

@@ -1,14 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { LoginButton } from './LoginButton';
-import { onAuth, signOutUser, type AuthUser } from '@/lib/auth/auth';
+import { signOutUser } from '@/lib/auth/auth';
+import { useAuthUser } from '@/hooks/useAuthUser';
 
 export function AccountButton() {
-  const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
-
-  useEffect(() => onAuth(setUser), []);
+  const user = useAuthUser();
 
   if (!user) {
     return <LoginButton className="btn btn-line btn-sm nav-login" />;

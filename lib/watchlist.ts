@@ -1,4 +1,4 @@
-import { currentUser } from './auth/auth';
+import { authResolved, currentUser } from './auth/auth';
 
 export interface WatchItem {
   sym: string;
@@ -6,7 +6,12 @@ export interface WatchItem {
   below: number | null;
 }
 
-function key(): string {
+/* Null until auth has resolved. Every read returns its default and every write
+   is dropped while the key is unknown, because guessing wrong means writing a
+   signed-in user's list into the anonymous bucket. Consumers should gate on a
+   resolved auth state (see `useAuthUser`) rather than relying on this. */
+function key(): string | null {
+  if (!authResolved()) return null;
   const u = currentUser();
   return `tf.watch.${u?.uid ?? 'anon'}`;
 }
@@ -20,8 +25,10 @@ const DEFAULT_ALERTS: AlertPrefs = { telegram: false, chatId: '' };
 
 export function getAlerts(): AlertPrefs {
   if (typeof window === 'undefined') return DEFAULT_ALERTS;
+  const k = key();
+  if (!k) return DEFAULT_ALERTS;
   try {
-    const raw = window.localStorage.getItem(`${key()}.alerts`);
+    const raw = window.localStorage.getItem(`${k}.alerts`);
     return raw ? { ...DEFAULT_ALERTS, ...(JSON.parse(raw) as AlertPrefs) } : DEFAULT_ALERTS;
   } catch {
     return DEFAULT_ALERTS;
@@ -30,8 +37,10 @@ export function getAlerts(): AlertPrefs {
 
 export function setAlerts(patch: Partial<AlertPrefs>): AlertPrefs {
   const next = { ...getAlerts(), ...patch };
+  const k = key();
+  if (!k) return next;
   try {
-    window.localStorage.setItem(`${key()}.alerts`, JSON.stringify(next));
+    window.localStorage.setItem(`${k}.alerts`, JSON.stringify(next));
   } catch {
   }
   return next;
@@ -39,8 +48,10 @@ export function setAlerts(patch: Partial<AlertPrefs>): AlertPrefs {
 
 export function getWatch(): WatchItem[] {
   if (typeof window === 'undefined') return [];
+  const k = key();
+  if (!k) return [];
   try {
-    const raw = window.localStorage.getItem(key());
+    const raw = window.localStorage.getItem(k);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
@@ -52,8 +63,10 @@ export function getWatch(): WatchItem[] {
 }
 
 function persist(list: WatchItem[]): WatchItem[] {
+  const k = key();
+  if (!k) return list;
   try {
-    window.localStorage.setItem(key(), JSON.stringify(list));
+    window.localStorage.setItem(k, JSON.stringify(list));
   } catch {
   }
   return list;

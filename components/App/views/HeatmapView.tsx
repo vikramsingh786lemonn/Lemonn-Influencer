@@ -1,24 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Monogram } from '../Monogram';
 import { PageHeader } from '../PageHeader';
 import { SamplePill } from '../SampleNote';
 import { Segmented } from '../Segmented';
 import { getIndexPerf, getRows, RANGES, type Range } from '@/lib/scanners';
 import { tvSymbol, tvUrl } from '@/lib/watchlist';
-
-const inr = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 1 })}`;
-const sign = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
+import { dirClass, inr, pct } from '@/lib/format';
 
 export function HeatmapView() {
   const [group, setGroup] = useState<'sector' | 'broader'>('sector');
   const [range, setRange] = useState<Range>('1D');
   const [picked, setPicked] = useState<string | null>(null);
 
-  const perf = getIndexPerf(group, range);
+  const perf = useMemo(() => getIndexPerf(group, range), [group, range]);
   const maxAbs = Math.max(...perf.map((p) => Math.abs(p.val)), 0.01);
-  const constituents = picked ? getRows().slice(0, 12) : [];
+  const constituents = useMemo(() => (picked ? getRows().slice(0, 12) : []), [picked]);
 
   return (
     <div>
@@ -63,11 +61,11 @@ export function HeatmapView() {
                   <span className="ws-bar-name">{p.name.replace('Nifty ', '')}</span>
                   <span className="ws-bar-plot">
                     <span
-                      className={`ws-bar-fill ${p.val >= 0 ? 'is-up' : 'is-down'}`}
+                      className={`ws-bar-fill ${dirClass(p.val)}`}
                       style={{ width: `${(Math.abs(p.val) / maxAbs) * 84}%` }}
                     />
-                    <span className={`ws-bar-val num ${p.val >= 0 ? 'is-up' : 'is-down'}`}>
-                      {sign(p.val)}
+                    <span className={`ws-bar-val num ${dirClass(p.val)}`}>
+                      {pct(p.val)}
                     </span>
                   </span>
                 </button>
@@ -104,8 +102,8 @@ export function HeatmapView() {
                     {r.sym}
                   </a>
                   <span className="ws-rank-px num">{inr(r.ltp)}</span>
-                  <span className={`ws-rank-chg num ${r.chgPct >= 0 ? 'is-up' : 'is-down'}`}>
-                    {sign(r.chgPct)}
+                  <span className={`ws-rank-chg num ${dirClass(r.chgPct)}`}>
+                    {pct(r.chgPct)}
                   </span>
                 </li>
               ))}

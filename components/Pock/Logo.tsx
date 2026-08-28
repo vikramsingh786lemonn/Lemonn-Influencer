@@ -2,7 +2,7 @@ type LogoProps = {
   size?: number;
 };
 
-export function LogoMark({ size = 30 }: LogoProps) {
+function LogoMark({ size = 30 }: LogoProps) {
   return (
     <svg
       width={size}

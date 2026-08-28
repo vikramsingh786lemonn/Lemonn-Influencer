@@ -15,10 +15,20 @@ import {
   Truck,
   type LucideIcon,
 } from 'lucide-react';
+import { PURCHASE_HREF } from '@/lib/routes';
 
+/* An entry with no `href` is a product surface that is described but not built.
+   It still renders — telling a visitor what the product covers is the nav's
+   marketing job — but as plain text with a "Soon" pill instead of a link into a
+   404, which is what all fourteen of these used to be.
+
+   Absence of `href` is the only signal; there is no separate `ready` flag to
+   keep in sync. The intended URLs live in `product-spec.md`, which is where a
+   plan belongs. Add the href back the day the route ships — `npm run
+   check:links` fails if it points at a page that still isn't there. */
 export interface NavLeaf {
   label: string;
-  href: string;
+  href?: string;
   desc: string;
   icon: LucideIcon;
   live?: boolean;
@@ -30,7 +40,13 @@ export interface NavGroup {
   items: NavLeaf[];
 }
 
-export type NavEntry = NavGroup | { label: string; href: string; live?: boolean };
+export interface NavFlat {
+  label: string;
+  href?: string;
+  live?: boolean;
+}
+
+export type NavEntry = NavGroup | NavFlat;
 
 export function isGroup(entry: NavEntry): entry is NavGroup {
   return 'items' in entry;
@@ -43,13 +59,11 @@ export const NAV_SCHEMA: NavEntry[] = [
     items: [
       {
         label: 'Option Apex',
-        href: '/option-apex',
         desc: 'Candle-by-candle open interest, plus Money Flux — the stocks where operators are concentrating positions.',
         icon: BarChart3,
       },
       {
         label: 'Option Clock',
-        href: '/option-clock',
         desc: 'Timestamped OI build-up by interval, with Index Mover and net bull/bear position.',
         icon: Clock,
       },
@@ -61,19 +75,16 @@ export const NAV_SCHEMA: NavEntry[] = [
     items: [
       {
         label: 'Insider Strategy',
-        href: '/insider-strategy',
         desc: '5/10-minute momentum spikes, Loss of Momentum, contraction breakouts, day high/low reversals.',
         icon: Activity,
       },
       {
         label: 'Sector Scope',
-        href: '/sector-scope',
         desc: 'Sector heatmap, then a drill-down to the names carrying the concentration.',
         icon: Compass,
       },
       {
         label: 'Swing Spectrum',
-        href: '/swing-spectrum',
         desc: 'Multi-day structure and end-of-day price action for positions held across sessions.',
         icon: TrendingUp,
       },
@@ -85,13 +96,11 @@ export const NAV_SCHEMA: NavEntry[] = [
     items: [
       {
         label: 'FII–DII Scanner',
-        href: '/fii-dii-scanner',
         desc: 'Foreign and domestic institutional net activity across cash and derivatives.',
         icon: Building2,
       },
       {
         label: 'Delivery Scanner',
-        href: '/delivery-scanner',
         desc: 'High-volume delivery accumulation in the cash market.',
         icon: Truck,
       },
@@ -103,25 +112,21 @@ export const NAV_SCHEMA: NavEntry[] = [
     items: [
       {
         label: 'Trading Journal',
-        href: '/trading-journal',
         desc: 'Log executions, tag mistakes, and see your own profit factor and equity curve.',
         icon: Notebook,
       },
       {
         label: 'Watchlist',
-        href: '/watchlist',
         desc: 'Your symbols with live context, wired to broker charting.',
         icon: ListChecks,
       },
       {
         label: 'Calculators',
-        href: '/calculator',
         desc: 'Position sizing, risk-to-reward, and options Greeks worked out before you commit.',
         icon: Calculator,
       },
       {
         label: 'Economic Calendar',
-        href: '/calendar',
         desc: 'RBI policy, inflation prints and earnings dates that move open positions.',
         icon: CalendarDays,
       },
@@ -133,25 +138,23 @@ export const NAV_SCHEMA: NavEntry[] = [
     items: [
       {
         label: 'Market Pulse',
-        href: '/market-pulse',
         desc: 'Sentiment, advance/decline and volatility across the whole market.',
         icon: LineChart,
         live: true,
       },
       {
         label: 'TradeStream',
-        href: '/tradestream-live',
         desc: 'A running broadcast of algorithmic setups as the scanners fire.',
         icon: Radio,
         live: true,
       },
       {
         label: 'Trade Tutor',
-        href: '/trade-tutor',
         desc: 'Video curriculum and manuals covering the logic behind every scanner.',
         icon: GraduationCap,
       },
     ],
   },
-  { label: 'Pricing', href: '/payments' },
+  /* The only top-level nav destination that resolves today. */
+  { label: 'Pricing', href: PURCHASE_HREF },
 ];

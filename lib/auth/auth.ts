@@ -34,6 +34,15 @@ export function currentUser(): AuthUser | null {
   return user ?? null;
 }
 
+/* `currentUser()` flattens the three-state value to two, which is right for
+   rendering but wrong for anything that keys storage by uid: while Firebase is
+   still resolving, `user` is undefined and a signed-in visitor would read and
+   write the anonymous bucket, then silently swap to their own once the SDK
+   lands. Callers that persist per-user data must wait for this to be true. */
+export function authResolved(): boolean {
+  return user !== undefined;
+}
+
 export function onAuth(cb: (u: AuthUser | null | undefined) => void): () => void {
   listeners.push(cb);
   cb(user);

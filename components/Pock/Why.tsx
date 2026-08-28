@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import {
   Activity,
   Calculator,
@@ -13,9 +12,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Reveal } from './Motion';
-import { WHY } from './content';
+import { WHY, type WhyIcon } from './content';
 
-const ICONS: Record<string, LucideIcon> = {
+const ICONS: Record<WhyIcon, LucideIcon> = {
   Activity,
   Calculator,
   CalendarDays,
@@ -52,16 +51,18 @@ export function Why() {
               <p className="why-lead-body">{lead.body}</p>
             </div>
 
+            {/* These describe what the subscription includes; none of them has
+                its own page yet, so the cards are not links. */}
             {tools.map((tool) => {
               const Icon = ICONS[tool.icon];
               return (
-                <Link key={tool.name} href={tool.href} className="why-card">
+                <div key={tool.name} className="why-card">
                   <span className="why-icon" aria-hidden="true">
-                    {Icon && <Icon size={19} />}
+                    <Icon size={19} />
                   </span>
                   <h3 className="why-name">{tool.name}</h3>
                   <p className="why-body">{tool.body}</p>
-                </Link>
+                </div>
               );
             })}
           </div>

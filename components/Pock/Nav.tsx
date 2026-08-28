@@ -11,6 +11,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { AccountButton } from './Login/AccountButton';
 import { AuthCta } from './Login/AuthCta';
 import { NAV_SCHEMA, isGroup, type NavGroup, type NavLeaf } from './nav.schema';
+import { PURCHASE_HREF } from '@/lib/routes';
 
 export function Nav() {
   const pathname = usePathname();
@@ -53,8 +54,8 @@ export function Nav() {
 
   const activeIndex = NAV_SCHEMA.findIndex((entry) =>
     isGroup(entry)
-      ? entry.items.some((i) => pathname.startsWith(i.href))
-      : pathname === entry.href,
+      ? entry.items.some((i) => i.href && pathname.startsWith(i.href))
+      : entry.href === pathname,
   );
 
   const openIndex = openValue ? NAV_SCHEMA.findIndex((e) => e.label === openValue) : -1;
@@ -90,12 +91,14 @@ export function Nav() {
             <Logo size={30} />
           </Link>
 
-          <Link href="/status" className="status-pill" aria-label="System status: live">
+          {/* Not a link: there is no /status page yet, and a status indicator
+              that 404s is worse than one that simply reports. */}
+          <span className="status-pill" role="status" aria-label="System status: live">
             <span className="status-dot" aria-hidden="true" />
             <span className="status-label" aria-hidden="true">
               System live
             </span>
-          </Link>
+          </span>
         </div>
 
         <NavMenu.Root
@@ -131,12 +134,19 @@ export function Nav() {
               isGroup(entry) ? (
                 <GroupTrigger key={entry.label} group={entry} pathname={pathname} index={i} />
               ) : (
-                <NavMenu.Item key={entry.href}>
-                  <NavMenu.Link asChild active={pathname === entry.href}>
-                    <Link href={entry.href} className="nav-link" data-nav-item={i}>
+                <NavMenu.Item key={entry.label}>
+                  {entry.href ? (
+                    <NavMenu.Link asChild active={pathname === entry.href}>
+                      <Link href={entry.href} className="nav-link" data-nav-item={i}>
+                        {entry.label}
+                      </Link>
+                    </NavMenu.Link>
+                  ) : (
+                    <span className="nav-link is-soon" data-nav-item={i}>
                       {entry.label}
-                    </Link>
-                  </NavMenu.Link>
+                      <SoonPill />
+                    </span>
+                  )}
                 </NavMenu.Item>
               ),
             )}
@@ -150,7 +160,7 @@ export function Nav() {
         <div className="nav-end pod">
           <ThemeToggle />
           <AccountButton />
-          <Link className="btn btn-pear btn-sm" href="/payments">
+          <Link className="btn btn-pear btn-sm" href={PURCHASE_HREF}>
             Buy now
           </Link>
           <button
@@ -183,24 +193,29 @@ export function Nav() {
                   <section key={entry.label} className="drawer-group">
                     <h2 className="drawer-heading">{entry.label}</h2>
                     {entry.items.map((item) => (
-                      <DrawerLink key={item.href} item={item} pathname={pathname} />
+                      <DrawerLink key={item.label} item={item} pathname={pathname} />
                     ))}
                   </section>
-                ) : (
+                ) : entry.href ? (
                   <Link
-                    key={entry.href}
+                    key={entry.label}
                     href={entry.href}
                     className="drawer-flat"
                     aria-current={pathname === entry.href ? 'page' : undefined}
                   >
                     {entry.label}
                   </Link>
+                ) : (
+                  <span key={entry.label} className="drawer-flat is-soon">
+                    {entry.label}
+                    <SoonPill />
+                  </span>
                 ),
               )}
 
               <div className="drawer-foot">
                 <AuthCta className="btn btn-line" onOpen={() => setDrawer(false)} />
-                <Link className="btn btn-pear" href="/payments">
+                <Link className="btn btn-pear" href={PURCHASE_HREF}>
                   Buy now
                 </Link>
               </div>
@@ -221,7 +236,7 @@ function GroupTrigger({
   pathname: string;
   index: number;
 }) {
-  const within = group.items.some((i) => pathname.startsWith(i.href));
+  const within = group.items.some((i) => i.href && pathname.startsWith(i.href));
 
   return (
     <NavMenu.Item value={group.label}>
@@ -237,21 +252,18 @@ function GroupTrigger({
         <p className="nav-panel-blurb">{group.blurb}</p>
         <ul className={group.items.length > 2 ? 'nav-panel-grid is-wide' : 'nav-panel-grid'}>
           {group.items.map((item) => (
-            <li key={item.href}>
-              <NavMenu.Link asChild active={pathname === item.href}>
-                <Link href={item.href} className="nav-card">
-                  <span className="nav-card-icon" aria-hidden="true">
-                    <item.icon size={17} />
-                  </span>
-                  <span className="nav-card-text">
-                    <span className="nav-card-title">
-                      {item.label}
-                      {item.live && <LivePill />}
-                    </span>
-                    <span className="nav-card-desc">{item.desc}</span>
-                  </span>
-                </Link>
-              </NavMenu.Link>
+            <li key={item.label}>
+              {item.href ? (
+                <NavMenu.Link asChild active={pathname === item.href}>
+                  <Link href={item.href} className="nav-card">
+                    <NavCardBody item={item} />
+                  </Link>
+                </NavMenu.Link>
+              ) : (
+                <span className="nav-card is-soon">
+                  <NavCardBody item={item} />
+                </span>
+              )}
             </li>
           ))}
         </ul>
@@ -260,23 +272,50 @@ function GroupTrigger({
   );
 }
 
-function DrawerLink({ item, pathname }: { item: NavLeaf; pathname: string }) {
+function NavCardBody({ item }: { item: NavLeaf }) {
   return (
-    <Link
-      href={item.href}
-      className="drawer-item"
-      aria-current={pathname === item.href ? 'page' : undefined}
-    >
+    <>
+      <span className="nav-card-icon" aria-hidden="true">
+        <item.icon size={17} />
+      </span>
+      <span className="nav-card-text">
+        <span className="nav-card-title">
+          {item.label}
+          {item.live && item.href && <LivePill />}
+          {!item.href && <SoonPill />}
+        </span>
+        <span className="nav-card-desc">{item.desc}</span>
+      </span>
+    </>
+  );
+}
+
+function DrawerLink({ item, pathname }: { item: NavLeaf; pathname: string }) {
+  const body = (
+    <>
       <span className="nav-card-icon" aria-hidden="true">
         <item.icon size={16} />
       </span>
       <span>
         <span className="nav-card-title">
           {item.label}
-          {item.live && <LivePill />}
+          {item.live && item.href && <LivePill />}
+          {!item.href && <SoonPill />}
         </span>
         <span className="nav-card-desc">{item.desc}</span>
       </span>
+    </>
+  );
+
+  if (!item.href) return <span className="drawer-item is-soon">{body}</span>;
+
+  return (
+    <Link
+      href={item.href}
+      className="drawer-item"
+      aria-current={pathname === item.href ? 'page' : undefined}
+    >
+      {body}
     </Link>
   );
 }
@@ -288,4 +327,10 @@ function LivePill() {
       Live
     </span>
   );
+}
+
+/* Marks a product surface that is described but not built. Saying "soon" is the
+   honest alternative to a link that 404s. */
+function SoonPill() {
+  return <span className="soon-pill">Soon</span>;
 }

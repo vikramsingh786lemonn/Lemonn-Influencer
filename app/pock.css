@@ -102,6 +102,9 @@
 }
 
 [data-theme='dark'] .pk {
+  /* Keep in sync with DARK_CANVAS in lib/theme.ts — the pre-paint script in
+     app/layout.tsx sets this colour before the stylesheet applies, so it
+     cannot read this property. Those are the only two copies. */
   --bg: #171a1c;
   --bg-sunk: #121416;
   --surface: #1f2326;
@@ -842,6 +845,32 @@ body:has(.pk) {
   text-transform: uppercase;
 }
 
+/* Same pill geometry as .live-pill, but neutral — it marks a surface that is
+   described and not yet built. Paired with .is-soon, which makes the row
+   non-interactive instead of linking into a 404. */
+.soon-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--elevated);
+  color: var(--text-faint);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pk .is-soon {
+  cursor: default;
+  opacity: 0.62;
+}
+
+.pk .nav-card.is-soon:hover,
+.pk .drawer-item.is-soon:hover {
+  background: transparent;
+}
+
 [data-theme='dark'] .pk .live-pill {
   background: rgba(134, 239, 172, 0.16);
   color: #86efac;
@@ -1260,25 +1289,8 @@ body:has(.pk) {
   color: var(--elevated-text);
 }
 
-.marquee-track {
-  display: flex;
-  width: max-content;
-}
 
-.marquee-row {
-  display: flex;
-  gap: var(--s-40);
-  padding-right: var(--s-40);
-  font-family: var(--font-pixel);
-  font-size: 1.5rem;
-  line-height: 1;
-  white-space: nowrap;
-}
 
-.marquee-row span::after {
-  content: ' ·';
-  color: var(--pear);
-}
 
 @keyframes tick-scroll {
   from {
@@ -2813,15 +2825,6 @@ body:has(.pk) {
   gap: 8px;
 }
 
-.pk .price-after {
-  margin: 0;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--bg-sunk);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--text-mute);
-}
 
 .pk .price-cta svg {
   transition: transform 0.3s var(--ease);
@@ -3550,16 +3553,6 @@ body:has(.pk) {
   font-weight: 600;
 }
 
-.ws-badge {
-  padding: 3px 9px;
-  border-radius: var(--r-pill);
-  border: 1px solid currentColor;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1.4;
-  white-space: nowrap;
-}
 
 .ws-grid {
   display: grid;

@@ -1,26 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Monogram } from '../Monogram';
 import { PageHeader } from '../PageHeader';
 import { SamplePill } from '../SampleNote';
 import { Segmented } from '../Segmented';
 import { getBreakouts, getRows, WINDOWS, type BreakoutWindow } from '@/lib/scanners';
 import { tvSymbol, tvUrl } from '@/lib/watchlist';
-
-const inr = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 1 })}`;
-const sign = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
+import { dirClass, inr, pct } from '@/lib/format';
 
 export function BreakoutsView() {
   const [winId, setWinId] = useState<BreakoutWindow['id']>('bo10');
   const win = WINDOWS.find((w) => w.id === winId) ?? WINDOWS[0];
-  const rows = getBreakouts(win);
 
-  const all = getRows();
-  const options = WINDOWS.map((w) => ({
-    id: w.id,
-    label: `${w.label} (${all.filter((r) => r[w.id]).length})`,
-  }));
+  /* Both of these hash the full 62-symbol universe. They were called in the
+     render body, so every click of the segmented control recomputed them —
+     and they will become async the day a real feed lands, which is far easier
+     from here than from an expression inline in the JSX. */
+  const rows = useMemo(() => getBreakouts(win), [win]);
+  const options = useMemo(() => {
+    const all = getRows();
+    return WINDOWS.map((w) => ({
+      id: w.id,
+      label: `${w.label} (${all.filter((r) => r[w.id]).length})`,
+    }));
+  }, []);
 
   return (
     <div>
@@ -64,8 +68,8 @@ export function BreakoutsView() {
                     </span>
                     <span className="ws-bo-px">
                       <span className="num">{inr(r.ltp)}</span>
-                      <span className={`num ${r.chgPct >= 0 ? 'is-up' : 'is-down'}`}>
-                        {sign(r.chgPct)}
+                      <span className={`num ${dirClass(r.chgPct)}`}>
+                        {pct(r.chgPct)}
                       </span>
                     </span>
                   </div>

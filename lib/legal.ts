@@ -33,6 +33,10 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
   terms: { title: 'Terms of Use', pending: true, blocks: [] },
   privacy: { title: 'Privacy Policy', pending: true, blocks: [] },
   refund: { title: 'Refund Policy', pending: true, blocks: [] },
+  /* Linked from the login form's consent line and the marketing footer. It
+     carries no copy yet, but a page saying so is the honest answer — the
+     alternative was a 404 underneath "By continuing you agree to…". */
+  'investor-charter': { title: 'Investor Charter & SCORES', pending: true, blocks: [] },
 };
 
 export const LEGAL_SLUGS = Object.keys(LEGAL_PAGES);

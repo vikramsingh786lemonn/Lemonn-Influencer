@@ -2,11 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from 'react';
 import { getWorld, SAMPLE, type WorldItem } from '@/lib/world';
-
-const sign = (n: number) =>
-  (n >= 0 ? '+' : '') + n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-
-const fmt = (n: number) => n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+import { dirClass, num, pct, signedNum } from '@/lib/format';
 
 export function WorldTicker() {
   const [items, setItems] = useState<WorldItem[]>(SAMPLE);
@@ -37,9 +33,9 @@ export function WorldTicker() {
       {items.map((it) => (
         <span className="tick" key={it.name}>
           <b className="tick-name">{it.name}</b>
-          <span className="tick-price num">{fmt(it.price)}</span>
-          <span className={`tick-chg num ${it.chgPct >= 0 ? 'is-up' : 'is-down'}`}>
-            {sign(it.chg)} ({sign(it.chgPct)}%)
+          <span className="tick-price num">{num(it.price)}</span>
+          <span className={`tick-chg num ${dirClass(it.chgPct)}`}>
+            {signedNum(it.chg)} ({pct(it.chgPct)})
           </span>
         </span>
       ))}

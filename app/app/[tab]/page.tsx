@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Stub } from '@/components/App/Stub';
 import { ApexView } from '@/components/App/views/ApexView';
 import { BoostView } from '@/components/App/views/BoostView';
 import { BreakoutsView } from '@/components/App/views/BreakoutsView';
@@ -11,6 +10,8 @@ import { MoversView } from '@/components/App/views/MoversView';
 import { WatchlistView } from '@/components/App/views/WatchlistView';
 import { APP_TABS, findTab } from '@/lib/app-tabs';
 
+/* Exhaustive over APP_TABS: `findTab` rejects any id not in that array, so
+   every key here has a route and every route has a view. */
 const VIEWS: Record<string, () => ReactNode> = {
   apex: ApexView,
   clock: ClockView,
@@ -38,6 +39,5 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function TabPage({ params }: Params) {
   const tab = findTab((await params).tab);
   if (!tab) notFound();
-  const View = VIEWS[tab.id];
-  return View ? <View /> : <Stub title={tab.long} />;
+  return VIEWS[tab.id]();
 }

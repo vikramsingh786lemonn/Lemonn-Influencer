@@ -1,15 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-export type Theme = 'light' | 'dark';
-
-export const THEME_KEY = 'pk-theme';
-
-function apply(theme: Theme) {
-  document.documentElement.dataset.theme = theme;
-  document.documentElement.style.background = theme === 'dark' ? '#171a1c' : '';
-}
+import { applyTheme, THEME_KEY, type Theme } from '@/lib/theme';
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>('light');
@@ -17,7 +9,7 @@ export function ThemeToggle() {
   useEffect(() => {
     const current = (document.documentElement.dataset.theme as Theme) || 'light';
     setTheme(current);
-    apply(current);
+    applyTheme(current);
   }, []);
 
   useEffect(() => {
@@ -26,7 +18,7 @@ export function ThemeToggle() {
       if (localStorage.getItem(THEME_KEY)) return;
       const next: Theme = e.matches ? 'dark' : 'light';
       setTheme(next);
-      apply(next);
+      applyTheme(next);
     };
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
@@ -35,7 +27,7 @@ export function ThemeToggle() {
   const toggle = () => {
     const next: Theme = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
-    apply(next);
+    applyTheme(next);
     localStorage.setItem(THEME_KEY, next);
   };
 

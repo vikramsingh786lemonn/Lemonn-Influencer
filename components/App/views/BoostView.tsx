@@ -3,8 +3,7 @@ import { PageHeader } from '../PageHeader';
 import { SamplePill } from '../SampleNote';
 import { getBoost } from '@/lib/scanners';
 import { tvSymbol, tvUrl } from '@/lib/watchlist';
-
-const sign1 = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}`;
+import { dirClass, pct, signed } from '@/lib/format';
 
 export function BoostView() {
   const rows = getBoost();
@@ -56,13 +55,13 @@ export function BoostView() {
                   </span>
                 </span>
 
-                <span className={`ws-boost-num num ${r.chgPct >= 0 ? 'is-up' : 'is-down'}`}>
-                  {sign1(r.chgPct)}%
+                <span className={`ws-boost-num num ${dirClass(r.chgPct)}`}>
+                  {pct(r.chgPct)}
                 </span>
 
                 <span className="ws-boost-num">
                   <span className={`ws-chip ${long ? 'is-up' : 'is-down'} num`}>
-                    {sign1(r.score)}
+                    {signed(r.score)}
                   </span>
                 </span>
 

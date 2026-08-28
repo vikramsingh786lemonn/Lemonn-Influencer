@@ -1,18 +1,16 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { LoginButton } from './LoginButton';
-import { onAuth, type AuthUser } from '@/lib/auth/auth';
-import { DEFAULT_TAB } from '@/lib/app-tabs';
+import { useAuthUser } from '@/hooks/useAuthUser';
+import { WORKSPACE_HREF } from '@/lib/routes';
 
 export function AuthCta({
   className = 'btn btn-line',
   children,
-  /* Straight to the default tab, not /app. Bare /app is a server redirect, so
-     linking to it costs an extra round trip on every entry to the workspace. */
-  signedInHref = `/app/${DEFAULT_TAB}`,
+  signedInHref = WORKSPACE_HREF,
   signedInLabel = 'Open workspace',
   onOpen,
 }: {
@@ -22,9 +20,7 @@ export function AuthCta({
   signedInLabel?: ReactNode;
   onOpen?: () => void;
 }) {
-  const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
-
-  useEffect(() => onAuth(setUser), []);
+  const user = useAuthUser();
 
   if (user) {
     return (

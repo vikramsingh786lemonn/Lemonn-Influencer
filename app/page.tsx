@@ -100,8 +100,8 @@ export default function Home() {
                 <h4>{col.heading}</h4>
                 <ul>
                   {col.links.map((l) => (
-                    <li key={l.href}>
-                      <Link href={l.href}>{l.label}</Link>
+                    <li key={l.label}>
+                      {l.href ? <Link href={l.href}>{l.label}</Link> : <span>{l.label}</span>}
                     </li>
                   ))}
                 </ul>

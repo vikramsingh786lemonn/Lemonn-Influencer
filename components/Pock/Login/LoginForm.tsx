@@ -12,7 +12,7 @@ import {
   verifyOtp,
   type AuthUser,
 } from '@/lib/auth/auth';
-import { DEFAULT_TAB } from '@/lib/app-tabs';
+import { legalHref, WORKSPACE_HREF } from '@/lib/routes';
 
 const CC = '+91';
 
@@ -36,7 +36,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void } = {}) {
     return onAuth((u: AuthUser | null | undefined) => {
       if (!u) return;
       if (onSuccess) onSuccess();
-      router.replace(`/app/${DEFAULT_TAB}`);
+      router.replace(WORKSPACE_HREF);
     });
   }, [router, onSuccess]);
 
@@ -223,9 +223,9 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void } = {}) {
 
       <p className="auth-legal micro">
         By continuing you agree to our{' '}
-        <Link href="/terms-and-condition">terms</Link> and confirm you have read the{' '}
-        <Link href="/investor-charter">investor charter</Link>. TradeFinder is an analytics
-        platform, not an advisory.
+        <Link href={legalHref('terms')}>terms</Link> and confirm you have read the{' '}
+        <Link href={legalHref('investor-charter')}>investor charter</Link>. TradeFinder is
+        an analytics platform, not an advisory.
       </p>
 
       <div id="recaptcha-container" />

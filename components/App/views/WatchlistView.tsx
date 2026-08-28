@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ExternalLink, X } from 'lucide-react';
 import { Monogram } from '../Monogram';
 import { PageHeader } from '../PageHeader';
-import { CONSTITUENTS } from '@/lib/apex';
+import { CONSTITUENTS } from '@/lib/sample-data';
 import {
   addSymbol,
   getAlerts,

@@ -1,27 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { Logo } from '@/components/Pock/Logo';
 import { ThemeToggle } from '@/components/Pock/ThemeToggle';
 import { WorldTicker } from '@/components/Pock/WorldTicker';
-import { onAuth, signOutUser, type AuthUser } from '@/lib/auth/auth';
+import { LoginButton } from '@/components/Pock/Login/LoginButton';
+import { signOutUser } from '@/lib/auth/auth';
+import { useAuthUser } from '@/hooks/useAuthUser';
 import { APP_TABS } from '@/lib/app-tabs';
+import { legalHref } from '@/lib/routes';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
+  const user = useAuthUser();
   const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    return onAuth(setUser);
-  }, []);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
 
   if (user === undefined) {
     return (
@@ -118,7 +112,11 @@ function SignedOut() {
     <div className="pk ws-boot">
       <h1 className="ws-title">Sign in to continue</h1>
       <p className="body">The workspace needs a verified mobile number.</p>
-      <Link href="/" className="btn btn-grass btn-sm">
+      {/* This screen exists to get someone signed in, so it leads with the
+          thing that does it. It previously offered only a link back to the
+          marketing site. */}
+      <LoginButton className="btn btn-pear btn-sm" />
+      <Link href="/" className="btn btn-line btn-sm">
         Back to TradeFinder
       </Link>
     </div>
@@ -133,10 +131,10 @@ function WorkspaceFooter() {
         recommendation to buy or sell any security.
       </p>
       <nav className="ws-foot-links" aria-label="Legal">
-        <Link href="/app/legal/disclaimer">Disclaimer</Link>
-        <Link href="/app/legal/terms">Terms</Link>
-        <Link href="/app/legal/privacy">Privacy</Link>
-        <Link href="/app/legal/refund">Refunds</Link>
+        <Link href={legalHref('disclaimer')}>Disclaimer</Link>
+        <Link href={legalHref('terms')}>Terms</Link>
+        <Link href={legalHref('privacy')}>Privacy</Link>
+        <Link href={legalHref('refund')}>Refunds</Link>
       </nav>
     </footer>
   );

@@ -1,11 +1,13 @@
+import { legalHref, PURCHASE_HREF } from '@/lib/routes';
+
 export interface Scanner {
   id: string;
-  index: string;
   name: string;
   title: string;
   body: string;
   chips: string[];
-  href: string;
+  /** Omitted while the scanner's own page does not exist. */
+  href?: string;
   cta?: string;
   image: string;
 }
@@ -13,37 +15,30 @@ export interface Scanner {
 export const SCANNERS: Scanner[] = [
   {
     id: 'option-apex',
-    index: '1.0',
     name: 'Option Apex',
     title: 'Candle-by-candle open interest',
     body: 'See how option positions are constructed through the session, interval by interval — not just where open interest ended up at the close.',
     chips: ['Money Flux', 'Per-candle OI', 'Index options'],
-    href: '/option-apex',
-    image: '/prod-1.png',
+    image: '/prod-1.avif',
   },
   {
     id: 'option-clock',
-    index: '2.0',
     name: 'Option Clock',
     title: 'Position building, time-bucketed',
     body: 'A time-series open-interest engine that isolates where institutions are building positions, across whichever intraday intervals you choose.',
     chips: ['Index Mover', 'Net Position', 'Custom intervals'],
-    href: '/option-clock',
-    image: '/prod-2.png',
+    image: '/prod-2.avif',
   },
   {
     id: 'sector-scope',
-    index: '3.0',
     name: 'Sector Scope',
     title: 'Sector strength, then the names',
     body: 'Ranks every sector as the session moves, then drills through to the equities where institutional accumulation is concentrated.',
     chips: ['Sector breadth', 'Index points', 'Stock drill-down'],
-    href: '/sector-scope',
-    image: '/prod-3.png',
+    image: '/prod-3.avif',
   },
   {
     id: 'insider-strategy',
-    index: '4.0',
     name: 'Insider Strategy',
     title: 'Market structure, five angles',
     body: 'Scans real-time price action and volume distribution across equity and F&O: momentum spikes, stalling trends, volatility squeezes and exhaustion at the day\u2019s extremes.',
@@ -54,19 +49,15 @@ export const SCANNERS: Scanner[] = [
       'Day High/Low Reversal',
       '2-Day High/Low BO',
     ],
-    href: '/insider-strategy',
-    image: '/prod-4.png',
+    image: '/prod-4.avif',
   },
   {
     id: 'productivity',
-    index: '5.0',
     name: 'Productivity & learning',
     title: 'Log the trade, learn the logic',
     body: 'Log executions and review where they went wrong, then read the quantitative logic behind each module \u2014 with position sizing, Greeks and the macro calendar alongside.',
     chips: ['Trading Journal', 'Trade Tutor', 'Calculators', 'Economic calendar'],
-    href: '/trading-journal',
-    cta: 'Open the Trading Journal',
-    image: '/prod-5.png',
+    image: '/prod-5.avif',
   },
 ];
 
@@ -103,7 +94,9 @@ export const FAQ = [
 
 export interface FooterLink {
   label: string;
-  href: string;
+  /** Omitted when the page does not exist yet — the label then renders as
+      plain text rather than as a link into a 404. See `nav.schema.ts`. */
+  href?: string;
 }
 
 export interface FooterColumn {
@@ -115,37 +108,39 @@ export const FOOTER: FooterColumn[] = [
   {
     heading: 'Scanners',
     links: [
-      { label: 'Option Apex', href: '/option-apex' },
-      { label: 'Option Clock', href: '/option-clock' },
-      { label: 'Insider Strategy', href: '/insider-strategy' },
-      { label: 'Sector Scope', href: '/sector-scope' },
-      { label: 'Swing Spectrum', href: '/swing-spectrum' },
-      { label: 'FII–DII Scanner', href: '/fii-dii-scanner' },
-      { label: 'Delivery Scanner', href: '/delivery-scanner' },
+      { label: 'Option Apex' },
+      { label: 'Option Clock' },
+      { label: 'Insider Strategy' },
+      { label: 'Sector Scope' },
+      { label: 'Swing Spectrum' },
+      { label: 'FII–DII Scanner' },
+      { label: 'Delivery Scanner' },
     ],
   },
   {
     heading: 'Live & tools',
     links: [
-      { label: 'Market Pulse', href: '/market-pulse' },
-      { label: 'TradeStream', href: '/tradestream-live' },
-      { label: 'Trading Journal', href: '/trading-journal' },
-      { label: 'Trade Tutor', href: '/trade-tutor' },
-      { label: 'Watchlist', href: '/watchlist' },
-      { label: 'Calculators', href: '/calculator' },
-      { label: 'Economic Calendar', href: '/calendar' },
+      { label: 'Market Pulse' },
+      { label: 'TradeStream' },
+      { label: 'Trading Journal' },
+      { label: 'Trade Tutor' },
+      { label: 'Watchlist' },
+      { label: 'Calculators' },
+      { label: 'Economic Calendar' },
     ],
   },
   {
     heading: 'Company & legal',
     links: [
-      { label: 'About us', href: '/about-us' },
-      { label: 'Contact us', href: '/contact-us' },
-      { label: 'Pricing', href: '/payments' },
-      { label: 'FAQ', href: '/faq' },
-      { label: 'System status', href: '/status' },
-      { label: 'Investor charter & SCORES', href: '/investor-charter' },
-      { label: 'Terms & conditions', href: '/terms-and-condition' },
+      { label: 'About us' },
+      { label: 'Contact us' },
+      { label: 'Pricing', href: PURCHASE_HREF },
+      { label: 'FAQ', href: '/#faq' },
+      { label: 'System status' },
+      { label: 'Investor charter & SCORES', href: legalHref('investor-charter') },
+      { label: 'Terms & conditions', href: legalHref('terms') },
+      { label: 'Privacy policy', href: legalHref('privacy') },
+      { label: 'Disclaimer', href: legalHref('disclaimer') },
     ],
   },
 ];
@@ -193,7 +188,27 @@ export const STRATEGIES = [
   },
 ];
 
-export const WHY = {
+/* Icon keys are resolved against the ICONS map in `Why.tsx`. The union keeps a
+   typo a compile error rather than a silently missing icon. */
+export type WhyIcon =
+  | 'Activity'
+  | 'Calculator'
+  | 'CalendarDays'
+  | 'CandlestickChart'
+  | 'GraduationCap'
+  | 'Landmark'
+  | 'NotebookPen'
+  | 'PackageCheck'
+  | 'ServerCog'
+  | 'Star';
+
+export interface WhyTool {
+  icon: WhyIcon;
+  name: string;
+  body: string;
+}
+
+export const WHY: { lead: { title: string; body: string }; tools: WhyTool[] } = {
   lead: {
     title: 'One login, the whole desk',
     body: 'Every scanner, the journal, the tutor and the calculators come on the same subscription. No tiers, no add-ons bought separately, and nothing that renews without you.',
@@ -203,61 +218,51 @@ export const WHY = {
       icon: 'NotebookPen',
       name: 'Trading Journal',
       body: 'Log executions and review where they went wrong, by pattern rather than by memory.',
-      href: '/trading-journal',
     },
     {
       icon: 'Activity',
       name: 'Market Pulse',
       body: 'Session sentiment, advance-decline and volatility gauges in one view.',
-      href: '/market-pulse',
     },
     {
       icon: 'Landmark',
       name: 'FII–DII data',
       body: 'Foreign and domestic institutional net participation, cash and derivatives.',
-      href: '/fii-dii-scanner',
     },
     {
       icon: 'PackageCheck',
       name: 'Delivery scanners',
       body: 'Cash-market accumulation metrics, for positioning that holds past the close.',
-      href: '/delivery-scanner',
     },
     {
       icon: 'CandlestickChart',
       name: 'Swing Spectrum',
       body: 'Multi-day candle structure and end-of-day action, for swing candidates.',
-      href: '/swing-spectrum',
     },
     {
       icon: 'Star',
       name: 'Watchlist',
       body: 'Your own symbol lists, wired to the charts you already read.',
-      href: '/watchlist',
     },
     {
       icon: 'CalendarDays',
       name: 'Economic calendar',
       body: 'RBI policy, inflation prints and earnings — the dates that move volatility.',
-      href: '/calendar',
     },
     {
       icon: 'Calculator',
       name: 'Calculators',
       body: 'Position sizing, options Greeks and decay, risk-to-reward before you commit.',
-      href: '/calculator',
     },
     {
       icon: 'GraduationCap',
       name: 'Trade Tutor',
       body: 'Manuals and video covering the quantitative logic behind each module.',
-      href: '/trade-tutor',
     },
     {
       icon: 'ServerCog',
       name: 'Public status page',
       body: 'Every service’s health, published. You see an outage when we do.',
-      href: '/status',
     },
   ],
 };

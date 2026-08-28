@@ -1,13 +1,4 @@
-import { CONSTITUENTS } from './apex';
-
-function hash(seed: string, mult: number): number {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * mult + seed.charCodeAt(i)) % 10007;
-  return h / 10007;
-}
-
-const r1 = (v: number) => Math.round(v * 10) / 10;
-const r2 = (v: number) => Math.round(v * 100) / 100;
+import { CONSTITUENTS, hash, r1, r2 } from './sample-data';
 
 export interface ScanRow {
   sym: string;

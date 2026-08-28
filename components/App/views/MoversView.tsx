@@ -3,9 +3,7 @@ import { PageHeader } from '../PageHeader';
 import { SamplePill } from '../SampleNote';
 import { getMovers, type ScanRow } from '@/lib/scanners';
 import { tvSymbol, tvUrl } from '@/lib/watchlist';
-
-const inr = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 1 })}`;
-const sign = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
+import { dirClass, inr, pct } from '@/lib/format';
 
 function List({ title, rows }: { title: string; rows: ScanRow[] }) {
   return (
@@ -35,8 +33,8 @@ function List({ title, rows }: { title: string; rows: ScanRow[] }) {
               {r.sym}
             </a>
             <span className="ws-rank-px num">{inr(r.ltp)}</span>
-            <span className={`ws-rank-chg num ${r.chgPct >= 0 ? 'is-up' : 'is-down'}`}>
-              {sign(r.chgPct)}
+            <span className={`ws-rank-chg num ${dirClass(r.chgPct)}`}>
+              {pct(r.chgPct)}
             </span>
           </li>
         ))}

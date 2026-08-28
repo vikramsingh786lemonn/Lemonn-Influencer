@@ -1,6 +1,7 @@
 import { PageHeader } from '../PageHeader';
 import { SamplePill } from '../SampleNote';
 import { getApex } from '@/lib/apex';
+import { dirClass, pct } from '@/lib/format';
 
 export function ApexView() {
   const { heatmap } = getApex();
@@ -37,16 +38,13 @@ export function ApexView() {
               key={t.sym}
               className="ws-tile"
               style={{
-                background: `rgba(var(${t.chgPct >= 0 ? '--up-rgb' : '--down-rgb'}), ${(
-                  0.14 + 0.5 * Math.min(1, Math.abs(t.chgPct) / 3)
-                ).toFixed(2)})`,
+                background: `rgba(var(${
+                  t.chgPct >= 0 ? '--up-rgb' : '--down-rgb'
+                }), ${(0.14 + 0.5 * Math.min(1, Math.abs(t.chgPct) / 3)).toFixed(2)})`,
               }}
             >
               <p className="ws-tile-sym">{t.sym}</p>
-              <p className={`ws-tile-pct num ${t.chgPct >= 0 ? 'is-up' : 'is-down'}`}>
-                {t.chgPct >= 0 ? '+' : ''}
-                {t.chgPct.toFixed(1)}%
-              </p>
+              <p className={`ws-tile-pct num ${dirClass(t.chgPct)}`}>{pct(t.chgPct)}</p>
             </div>
           ))}
         </div>

@@ -100,10 +100,15 @@ export function Scanners() {
                               ))}
                             </ul>
 
-                            <Link className="btn btn-line btn-sm scan-cta" href={scanner.href}>
-                              {scanner.cta ?? `Open ${scanner.name}`}
-                              <ArrowRight size={16} aria-hidden="true" />
-                            </Link>
+                            {/* No CTA while the scanner has no page of its
+                                own — the chips above already say what it
+                                does, and a button into a 404 does not. */}
+                            {scanner.href && (
+                              <Link className="btn btn-line btn-sm scan-cta" href={scanner.href}>
+                                {scanner.cta ?? `Open ${scanner.name}`}
+                                <ArrowRight size={16} aria-hidden="true" />
+                              </Link>
+                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>

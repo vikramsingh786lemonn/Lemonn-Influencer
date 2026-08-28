@@ -20,7 +20,10 @@ not secrets, and access is gated by Firebase's Authorized Domains list.
 
 ```bash
 npm run build        # production build
+npm run check        # tsc --noEmit && eslint && check:links  — run this before pushing
 npm run lint         # eslint, flat config in eslint.config.mjs
+npm run check:links  # every internal href resolves to a real route
+npm run images       # regenerate public/*.avif from assets-originals/
 npx tsc --noEmit     # type check
 ```
 
@@ -45,12 +48,25 @@ else about the flow is identical.
 | `/login` | Phone-OTP sign-in. Also available as a modal from any "Log in" button |
 | `/app` | Redirects to the default workspace tab |
 | `/app/[tab]` | Workspace: `apex`, `clock`, `boost`, `movers`, `breakouts`, `heatmap`, `watchlist` |
-| `/app/legal/[page]` | Legal pages |
-| `/lab/buttons` | Dev playground for the button system. Not linked from the site |
+| `/legal/[page]` | `disclaimer`, `terms`, `privacy`, `refund`, `investor-charter`. **Public** — the login form links the terms from its consent line, before anyone has an account |
 
-> **Heads up:** the nav links to the full route matrix from `product-spec.md`
-> (`/option-apex`, `/payments`, `/status`, `/faq`, …). Most of those pages do not exist
-> yet and will 404. `/payments` in particular is the target of every purchase CTA.
+### Links to routes that do not exist yet
+
+The nav, footer and feature grids were written against the full route matrix in
+`product-spec.md` (`/option-apex`, `/market-pulse`, `/status`, …). Those pages do not
+exist, and every one of them used to render as a link straight into a 404.
+
+**The rule now: no href means not built.** An entry with no `href` renders as plain
+text with a "Soon" pill instead of a link. There is no separate `ready` flag to keep in
+sync — absence of the href *is* the signal, in `nav.schema.ts`, `content.ts`'s `FOOTER`
+and `WHY`, and `SCANNERS`. Add the href back the day the route ships.
+
+`npm run check:links` walks the App Router tree and fails if any emitted internal href
+has no page, so this cannot silently regress. It runs as part of `npm run check`.
+
+Purchase CTAs point at `PURCHASE_HREF` in `lib/routes.ts` — currently `/#pricing`,
+because `/payments` does not exist. Change that one constant when it does and all five
+CTAs follow.
 
 ---
 
@@ -62,7 +78,8 @@ app/
   pock.css            the design system (see below)
   globals.css         document reset + Tailwind's Preflight, nothing else
   icon.svg            favicon — hand-drawn copy of Logo.tsx's geometry
-  login/, app/, lab/  routes
+  error.tsx           root error boundary
+  login/, app/, legal/  routes
 
 components/
   Pock/               marketing site components
@@ -78,10 +95,24 @@ components/
     AppShell.tsx      chrome shared by every tab
     views/            one component per scanner tab
 
+hooks/
+  useAuthUser.ts      the three-state auth subscription, in one place
+
 lib/
   auth/               the only place Firebase is imported
+  routes.ts           every internal href that is not a literal — start here
+  theme.ts            Theme type, storage key, DARK_CANVAS, applyTheme
+  format.ts           inr / pct / num / signed / dirClass — all number rendering
+  sample-data.ts      the deterministic hash + CONSTITUENTS the fake data is built on
   app-tabs.ts         the workspace tab set — one array drives nav, routes and titles
   apex.ts, scanners.ts, watchlist.ts, world.ts, legal.ts    data providers
+
+scripts/
+  check-links.mjs     asserts every internal href resolves
+  optimise-images.mjs regenerates public/*.avif from assets-originals/
+
+docs/button-lab/      a rejected button system, kept for reference, not a route
+assets-originals/     high-res image sources (gitignored)
 ```
 
 **Reference documents** are kept locally and deliberately not committed —
@@ -169,7 +200,14 @@ AuthUser    // signed in
 ```
 
 Treating `undefined` as signed-out is what makes a login screen flash on every refresh.
-`AccountButton.tsx` shows the intended handling.
+Use the `useAuthUser()` hook (`hooks/useAuthUser.ts`) — it preserves all three states.
+Do not re-inline the `useState`/`useEffect(onAuth)` pair; four components had their own
+copy of it.
+
+Anything that **persists** per-user data must additionally wait for `authResolved()`.
+`currentUser()` flattens `undefined` to `null`, which is right for rendering and wrong
+for keying storage: a signed-in visitor would read and write the anonymous bucket until
+the SDK landed, then silently swap. `lib/watchlist.ts` shows the handling.
 
 The SDK loads dynamically and off the critical path, so it stays out of the shared chunk
 that every page pays for.
@@ -189,20 +227,42 @@ that every page pays for.
   the routes and the titles from a single source; adding an item is a data edit.
 - **Respect `prefers-reduced-motion`** on anything that loops or animates on entry.
 - **Illustrative data must say so.** Every mocked number carries a "sample data" note.
+- **Never hand-format a number.** `lib/format.ts` owns `inr`, `pct`, `num`, `signed` and
+  `dirClass`. These were once copy-pasted across five views and had drifted to two
+  different precisions for the same "1D %" column.
+- **Never write an internal href as a bare literal** if it is anything but `/`. It goes
+  in `lib/routes.ts`, or it is omitted because the page does not exist.
 
 ---
 
 ## Known gaps
 
-- Most nav routes 404, including `/payments` — every purchase CTA points there.
+- **The workspace is a front end with no backend.** Everything under `/app` renders
+  deterministic fake data from `lib/sample-data.ts`. The auth gate in `AppShell` is
+  client-side over statically generated pages, which is adequate only because there is
+  nothing real to protect. **The first real data feed is an architectural milestone, not
+  a swap:** it needs a server-side gate (middleware or a Server Component check), and
+  the `lib/` providers have to become async — they are synchronous pure functions today.
+- `lib/watchlist.ts` keys `localStorage` by uid and returns defaults until auth resolves
+  (`authResolved()`), so a signed-in user can never read or write the anonymous bucket.
+  Anything else that persists per-user data must gate the same way.
 - The homepage's closer form has no endpoint; its input is deliberately unnamed so
   nothing is submitted. Give it a `name` when a handler exists.
 - `lib/world.ts` reads an optional `public/world_ticker.json` that is not committed, so
-  the ticker renders illustrative reference levels.
-- `tailwind.config.ts` is inert — Tailwind v4 is CSS-first and nothing declares
-  `@config`. No Tailwind utilities are used anywhere; the import is kept for Preflight.
-- ESLint extends `next/core-web-vitals` only. `@typescript-eslint` is in
-  `devDependencies` but not wired into `eslint.config.mjs`, so TypeScript-specific rules
-  (`no-explicit-any`, unused vars) never run. Enabling them will surface a backlog.
+  the ticker renders illustrative reference levels — and does a request that 404s on
+  every mount to find that out. Gate it on an env flag when the feed is real.
+- `WorldTicker` mounts on both the homepage and in `AppShell`; each instance fetches
+  independently. Harmless while the fetch fails, a duplicate poller once it doesn't.
+- On mobile the desktop image set is `display: none`, so it is not fetched — except the
+  first, which carries `priority`. That is one ~126 KB AVIF downloaded and not shown.
+  Not worth restructuring the pinned-scroll markup for; noted so it isn't rediscovered.
+- No tests. The highest-value first ones are the pure functions in `lib/scanners.ts`
+  (the `bo10/bo50/bo90` comparisons) and `lib/format.ts`.
+- Marketing copy in `content.ts` and `nav.schema.ts` says "real time", "second by
+  second" and "candle-by-candle OI". The data layer cannot currently support those
+  claims — a compliance question, not a code one, but it is open.
 - `.vscode/settings.json` (which silences the editor's complaints about Tailwind v4
   at-rules) is gitignored, so it does not reach other machines.
+- Tailwind is installed but no utility class is used anywhere; `@import "tailwindcss"`
+  in `globals.css` is kept for Preflight alone. `tailwind.config.ts` was deleted —
+  Tailwind v4 is CSS-first and nothing declared `@config`, so it never did anything.

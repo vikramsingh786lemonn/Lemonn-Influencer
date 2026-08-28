@@ -3,6 +3,7 @@ import { ArrowRight, Check, ShieldOff, Smartphone, Sparkles } from 'lucide-react
 import { AuthCta } from './Login/AuthCta';
 import { Reveal } from './Motion';
 import { PRICING } from './content';
+import { PURCHASE_HREF } from '@/lib/routes';
 
 export function Pricing() {
   const { plan, promo, policy, device } = PRICING;
@@ -46,7 +47,7 @@ export function Pricing() {
               </ul>
 
               <div className="price-foot">
-                <Link className="btn btn-pear price-cta" href="/payments">
+                <Link className="btn btn-pear price-cta" href={PURCHASE_HREF}>
                   {plan.cta}
                   <ArrowRight size={16} aria-hidden="true" />
                 </Link>
@@ -87,7 +88,7 @@ export function Pricing() {
                 <p className="price-cta-note micro">{promo.ctaNote}</p>
                 <AuthCta
                   className="btn btn-line price-cta"
-                  signedInHref="/payments"
+                  signedInHref={PURCHASE_HREF}
                   signedInLabel={promo.cta}
                 >
                   {promo.cta}

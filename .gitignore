@@ -45,3 +45,7 @@ yarn-error.log*
 
 # internal npm proxy — machine-specific, breaks CI that cannot reach it
 .npmrc
+
+# High-resolution image sources. The served AVIFs in public/ are generated from
+# these (see scripts/optimise-images.mjs); the 2 MB PNGs are kept locally only.
+/assets-originals

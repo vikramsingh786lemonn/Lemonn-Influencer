@@ -89,6 +89,16 @@
   overflow-x: clip;
 }
 
+/* The sideways rubber-band has to be stopped on the viewport itself: .pk is an
+   inner div, and overscroll-behavior / overflow are only honoured on the
+   scroll container (html/body), where they propagate to the viewport. */
+html:has(.pk),
+html:has(.pk) body {
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+  max-width: 100%;
+}
+
 @media (min-width: 1680px) {
   html:has(.pk) {
     font-size: 17px;
@@ -466,8 +476,10 @@ body:has(.pk) {
   position: sticky;
   top: 0;
   z-index: 60;
+  /* Fixed flow height: the pill inside may shrink on scroll, but the space the
+     nav occupies must never change, or the whole page jumps under the cursor. */
+  height: 82px;
   padding: var(--s-16) var(--s-24) var(--s-8);
-  transition: padding-top 0.3s var(--ease);
 }
 
 .nav-inner {
@@ -524,7 +536,6 @@ body:has(.pk) {
 
 .nav.is-scrolled {
   --nav-h: 70px;
-  padding-top: 10px;
 }
 
 .nav.is-scrolled .nav-inner {
@@ -2451,7 +2462,9 @@ body:has(.pk) {
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
-  padding: 28px 0 40px;
+  /* Top padding is hover headroom, not decoration: overflow:hidden clips
+     vertically too, and a hovered card rises ~33px. 28px cut the top border. */
+  padding: 48px 0 40px;
   opacity: 0;
   transform: translateY(18px);
   transition:
@@ -2945,13 +2958,10 @@ body:has(.pk) {
   background: var(--surface);
   text-decoration: none;
   color: inherit;
-  transition:
-    transform 0.3s var(--ease),
-    border-color 0.3s var(--ease);
+  transition: border-color 0.3s var(--ease);
 }
 
 .pk .why-card:hover {
-  transform: translateY(-4px);
   border-color: var(--accent-ink);
 }
 
@@ -3488,23 +3498,6 @@ body:has(.pk) {
   box-shadow: 0 1px 2px rgba(9, 26, 12, 0.1);
 }
 
-.ws-split {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-  gap: var(--s-16);
-  align-items: start;
-}
-
-.ws-split > .ws-card {
-  margin-bottom: 0;
-}
-
-@media (max-width: 1023px) {
-  .ws-split {
-    grid-template-columns: 1fr;
-  }
-}
-
 .ws-rank {
   display: flex;
   flex-direction: column;
@@ -3554,10 +3547,31 @@ body:has(.pk) {
 }
 
 
+/* Four across, fixed — not `auto-fill`, which packed five or six 210px cards
+   onto a wide screen. The count is a design decision, not a function of window
+   width; the roomier gutter and card padding do the decluttering. */
 .ws-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: var(--s-12);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-20);
+}
+
+@media (max-width: 1400px) {
+  .ws-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .ws-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .ws-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ws-mono {
@@ -3571,21 +3585,160 @@ body:has(.pk) {
   color: #fff;
 }
 
+/* ===== elevation system =================================================
+   Two tiers: `slab` (bevel + shadow, no motion) for cards you look at, `lift`
+   (slab + pointer tilt + sheen) for cards you click.
+
+   Not applied to .ws-card (full-width containers), treemap tiles (no gap to
+   lift into, and depth fights the area encoding), table rows, .block (the
+   mosaic is flat by design) or .nav-card. */
+.ws-stat,
+.ws-bo,
+.pk .price-card,
+.pk .why-card {
+  --slab-face: rgba(255, 255, 255, 0.55);
+  --slab-bevel: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.85),
+    rgba(255, 255, 255, 0.2) 34%,
+    rgba(0, 0, 0, 0.1)
+  );
+  /* Layered, never a single blur: a tight contact shadow anchors the card while
+     the wide one carries the height. One blur reads as a sticker. */
+  --slab-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.06),
+    0 4px 10px -4px rgba(0, 0, 0, 0.12);
+  --slab-shadow-hi:
+    0 2px 3px rgba(0, 0, 0, 0.08),
+    0 10px 20px -8px rgba(0, 0, 0, 0.18),
+    0 28px 46px -22px rgba(0, 0, 0, 0.26);
+
+  position: relative;
+  background-image: linear-gradient(160deg, var(--slab-face), transparent 46%);
+  box-shadow: var(--slab-shadow);
+}
+
+[data-theme='dark'] .ws-stat,
+[data-theme='dark'] .ws-bo,
+[data-theme='dark'] .pk .price-card,
+[data-theme='dark'] .pk .why-card {
+  --slab-face: rgba(255, 255, 255, 0.045);
+  --slab-bevel: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.22),
+    rgba(255, 255, 255, 0.04) 34%,
+    rgba(0, 0, 0, 0.28)
+  );
+  --slab-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.18),
+    0 4px 10px -4px rgba(0, 0, 0, 0.3);
+  --slab-shadow-hi:
+    0 2px 3px rgba(0, 0, 0, 0.2),
+    0 10px 20px -8px rgba(0, 0, 0, 0.42),
+    0 28px 46px -22px rgba(0, 0, 0, 0.55);
+}
+
+/* --- tier 2: lift --- driven by the custom properties `useTilt` writes, so
+   the card rotates toward the cursor rather than playing a canned transition. */
+.ws-bo,
+.pk .why-card,
+.pk .price-card {
+  --rx: 0deg;
+  --ry: 0deg;
+  --mx: 50%;
+  --my: 0%;
+  --lift: 0px;
+
+  transform-style: preserve-3d;
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry))
+    translate3d(0, var(--lift), 0);
+  transition:
+    box-shadow 0.28s var(--ease),
+    transform 0.4s var(--ease);
+  will-change: transform;
+}
+
+/* Asymmetric on purpose: the tilt snaps in under the cursor and eases back out
+   on leave. Equal timing in both directions feels laggy. */
+.ws-bo:hover,
+.ws-bo:focus-visible,
+.pk .why-card:hover,
+.pk .price-card:hover {
+  --lift: -4px;
+  box-shadow: var(--slab-shadow-hi);
+  transition-duration: 0.08s, 0.12s;
+}
+
+.tilt-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    300px circle at var(--mx) var(--my),
+    rgba(255, 255, 255, 0.14),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 0.25s var(--ease);
+  pointer-events: none;
+}
+
+.ws-bo:hover .tilt-sheen,
+.ws-bo:focus-visible .tilt-sheen,
+.pk .why-card:hover .tilt-sheen,
+.pk .price-card:hover .tilt-sheen {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-bo,
+  .pk .why-card,
+  .pk .price-card,
+  .ws-bo-lift {
+    transform: none;
+  }
+}
+
+/* The bevel ring: lit along the top edge, dark along the bottom, so a face
+   reads as a solid slab catching light from above rather than a flat fill. */
+.ws-stat::before,
+.ws-bo::before,
+.pk .price-card::before,
+.pk .why-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--slab-bevel);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* --- the 3D breakout card: raised face, bevel ring, pointer-tracked sheen,
+   and content lifted in Z so it parallaxes as the card rotates. */
 .ws-bo {
   display: flex;
   flex-direction: column;
-  gap: var(--s-8);
-  padding: var(--s-12);
-  border: 1px solid var(--line);
-  border-radius: calc(var(--r-tile) * 1.5);
-  transition:
-    border-color 0.18s var(--ease),
-    background 0.18s var(--ease);
+  gap: var(--s-12);
+  padding: var(--s-20);
+  border-radius: var(--r-panel);
+  background-color: var(--surface);
 }
 
-.ws-bo:hover {
-  border-color: var(--text-faint);
-  background: var(--bg-sunk);
+/* Content sits off the face, so it parallaxes as the card tilts. */
+.ws-bo-lift {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  transform: translateZ(26px);
 }
 
 .ws-bo-head {
@@ -3623,8 +3776,8 @@ body:has(.pk) {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--s-8);
-  padding-top: var(--s-8);
+  gap: var(--s-12);
+  padding-top: var(--s-12);
   border-top: 1px solid var(--line);
 }
 
@@ -3633,71 +3786,11 @@ body:has(.pk) {
   font-weight: 600;
 }
 
-.ws-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.ws-bar-row {
-  display: grid;
-  grid-template-columns: 11rem 1fr;
-  align-items: center;
-  gap: var(--s-12);
-  width: 100%;
-  padding: 1px var(--s-8) 1px 0;
-  border: none;
-  border-radius: var(--r-tile);
-  background: transparent;
-  font: inherit;
-  font-size: 0.875rem;
-  text-align: left;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.ws-bar-row:hover,
-.ws-bar-row[data-active] {
-  background: var(--bg-sunk);
-}
-
-.ws-bar-row[data-active] .ws-bar-name {
-  font-weight: 600;
-}
-
-.ws-bar-name {
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--text-mute);
-}
-
-.ws-bar-plot {
-  display: flex;
-  align-items: center;
-  gap: var(--s-8);
-  min-width: 0;
-}
-
-.ws-bar-fill {
-  display: block;
-  flex: 0 0 auto;
-  height: 20px;
-  min-width: 3px;
-  border-radius: 6px;
-  background: currentColor;
-}
-
-.ws-bar-val {
-  flex-shrink: 0;
-  font-weight: 600;
-}
-
 .ws-boost-head,
 .ws-boost-row {
   display: grid;
-  grid-template-columns: 1.75rem 1fr 6rem 6rem 4rem;
+  grid-template-columns:
+    1.75rem minmax(0, 1fr) 6.5rem 5rem 4.5rem 5rem 3.5rem 3.25rem minmax(90px, 9rem);
   align-items: center;
   gap: var(--s-16);
 }
@@ -3750,36 +3843,16 @@ body:has(.pk) {
   text-decoration: underline;
 }
 
-.ws-boost-side {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-}
-
 .ws-boost-num {
   text-align: right;
   font-weight: 600;
 }
 
-.ws-boost-mid {
+/* The Boost label heads both the value and its bar, so it spans the pair and
+   centres over the group rather than right-aligning to the far edge of the bar. */
+.ws-boost-span {
+  grid-column: span 2;
   text-align: center;
-}
-
-.ws-chip {
-  display: inline-block;
-  min-width: 3.5rem;
-  padding: 4px 10px;
-  border-radius: var(--r-tile);
-  font-weight: 600;
-  text-align: center;
-}
-
-.ws-chip.is-up {
-  background: rgba(var(--up-rgb), 0.16);
-}
-
-.ws-chip.is-down {
-  background: rgba(var(--down-rgb), 0.16);
 }
 
 .ws-search {
@@ -3901,22 +3974,6 @@ body:has(.pk) {
   line-height: 1.5;
 }
 
-@media (max-width: 640px) {
-  .ws-bar-name {
-    width: 6.5rem;
-  }
-
-  .ws-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 400px) {
-  .ws-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 [data-theme='dark'] .ws,
 [data-theme='dark'] .ws-boot {
   --up: #22c55e;
@@ -3943,37 +4000,9 @@ body:has(.pk) {
     grid-template-columns: repeat(13, 1fr);
   }
 
-  .ws-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-
-  .ws-bar-row {
-    padding: 7px var(--s-12);
-  }
-
   .ws-boost-row {
     font-size: 1rem;
   }
-}
-
-.ws-rank-head {
-  display: flex;
-  align-items: center;
-  gap: var(--s-12);
-  padding-bottom: var(--s-12);
-  border-bottom: 1px solid var(--line);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.ws-rank-head .ws-rank-sym {
-  font-weight: 600;
-}
-
-@media (min-width: 1500px) {
 }
 
 .ws-head-meta {
@@ -4064,15 +4093,6 @@ body:has(.pk) {
     grid-template-columns: 1.5rem minmax(8rem, 1fr) 4.5rem;
     gap: var(--s-8);
   }
-
-  .ws-bar-row {
-    grid-template-columns: 6.5rem 1fr;
-    font-size: 0.875rem;
-  }
-
-  .ws-bar-fill {
-    height: 22px;
-  }
 }
 
 .ws-controls {
@@ -4091,8 +4111,802 @@ body:has(.pk) {
     gap: var(--s-8);
   }
 
-  .ws-boost-head > :last-child,
-  .ws-boost-mid {
+  .ws-boost-head > :last-child {
     display: none;
   }
 }
+
+/* ------------------------------------------------------- Options Apex */
+
+.ws-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-12);
+  margin-bottom: var(--s-16);
+}
+
+.ws-stat {
+  padding: var(--s-16);
+  border-radius: var(--r-card);
+  background: var(--surface);
+}
+
+.ws-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.ws-stat-value {
+  margin-top: 6px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.ws-stat-sub {
+  margin-top: 2px;
+}
+
+.ws-legend {
+  display: flex;
+  gap: var(--s-16);
+  flex: none;
+}
+
+.ws-legend-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ws-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.ws-swatch.is-up {
+  background: var(--up);
+}
+
+.ws-swatch.is-down {
+  background: var(--down);
+}
+
+.ws-chart {
+  border-radius: var(--r-panel);
+  background: var(--bg-sunk);
+  padding: var(--s-12);
+}
+
+.ws-readout {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-12);
+  padding: 0 4px var(--s-8);
+  font-size: 0.75rem;
+  color: var(--text-mute);
+}
+
+.ws-readout-t {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ws-readout-k b {
+  margin-left: 3px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ws-readout-gap {
+  flex: 1;
+}
+
+.ws-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+}
+
+.ws-grid-line,
+.ws-zero {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.ws-zero {
+  stroke-opacity: 0.9;
+}
+
+.ws-cross {
+  stroke: var(--text-mute);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.ws-wick {
+  stroke-width: 1;
+}
+
+.is-up .ws-wick {
+  stroke: var(--up);
+}
+
+.is-down .ws-wick {
+  stroke: var(--down);
+}
+
+.is-up .ws-body,
+.ws-flow.is-up {
+  fill: var(--up);
+}
+
+.is-down .ws-body,
+.ws-flow.is-down {
+  fill: var(--down);
+}
+
+.ws-flow {
+  fill-opacity: 0.75;
+}
+
+.ws-axis {
+  fill: var(--text-mute);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.ws-apex-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: var(--s-16);
+  align-items: start;
+}
+
+.ws-apex-split > .ws-card {
+  margin-bottom: var(--s-16);
+}
+
+.ws-heat.is-compact {
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+}
+
+.ws-ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ws-ladder-head,
+.ws-ladder-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-8);
+}
+
+.ws-ladder-head {
+  padding-bottom: 4px;
+  text-align: center;
+}
+
+.ws-ladder-row {
+  padding: 3px 0;
+  border-radius: var(--r-tile);
+}
+
+.ws-ladder-row[data-atm] {
+  background: rgba(var(--accent-rgb, 168, 230, 100), 0.14);
+  outline: 1px solid var(--line);
+}
+
+.ws-ladder-strike {
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ws-ladder-side {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-mute);
+}
+
+.ws-ladder-side > span {
+  flex: none;
+  width: 2.6rem;
+}
+
+.ws-ladder-side i {
+  flex: none;
+  height: 14px;
+  min-width: 2px;
+  border-radius: 3px;
+}
+
+.ws-ladder-side.is-call {
+  justify-content: flex-end;
+}
+
+.ws-ladder-side.is-call > span {
+  margin-right: auto;
+  text-align: left;
+}
+
+.ws-ladder-side.is-put > span {
+  margin-left: auto;
+  text-align: right;
+}
+
+.ws-ladder-side.is-call i {
+  background: rgba(var(--down-rgb), 0.55);
+}
+
+.ws-ladder-side.is-put i {
+  background: rgba(var(--up-rgb), 0.55);
+}
+
+@media (max-width: 1023px) {
+  .ws-apex-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .ws-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ws-stat-value {
+    font-size: 1.25rem;
+  }
+}
+
+/* ------------------------------------------------------ Intraday Boost */
+
+.ws-buildup {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.ws-buildup.is-long {
+  color: var(--up);
+}
+
+.ws-buildup.is-short {
+  color: var(--down);
+}
+
+/* Covering and unwinding are the two "position leaving" quadrants. They are
+   not the same event as a fresh build-up and must not read as one, so they sit
+   in the muted neutral rather than borrowing the up/down colours. */
+.ws-buildup.is-cover,
+.ws-buildup.is-unwind {
+  color: var(--text-mute);
+}
+
+.ws-vol {
+  color: var(--text-mute);
+  font-weight: 400;
+}
+
+.ws-boost-plot {
+  position: relative;
+  display: block;
+  height: 22px;
+}
+
+/* Left-anchored magnitude, not a diverging bar: the list is filtered to one
+   end of the ranking at a time, so a centre axis only ever wasted half the
+   column. Direction is carried by the colour. */
+.ws-boost-fill {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  height: 14px;
+  border-radius: 3px;
+  min-width: 2px;
+}
+
+.ws-boost-fill.is-up {
+  background: rgba(var(--up-rgb), 0.6);
+}
+
+.ws-boost-fill.is-down {
+  background: rgba(var(--down-rgb), 0.6);
+}
+
+@media (max-width: 1100px) {
+  .ws-boost-head,
+  .ws-boost-row {
+    grid-template-columns: 1.75rem minmax(0, 1fr) 4.5rem 3.25rem minmax(80px, 8rem);
+    gap: var(--s-12);
+  }
+
+  /* Drop LTP, OI chg and Vol; keep 1D %, Boost and the bar. */
+  .ws-boost-head > :nth-child(3),
+  .ws-boost-row > :nth-child(3),
+  .ws-boost-head > :nth-child(5),
+  .ws-boost-row > :nth-child(5),
+  .ws-boost-head > :nth-child(6),
+  .ws-boost-row > :nth-child(6),
+  .ws-boost-head > :nth-child(7),
+  .ws-boost-row > :nth-child(7) {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------- Gainers & Losers */
+
+.ws-breadth {
+  display: flex;
+  gap: 3px;
+  height: 30px;
+}
+
+.ws-breadth-seg {
+  display: flex;
+  align-items: center;
+  min-width: 2.25rem;
+  padding: 0 10px;
+  border-radius: var(--r-tile);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ws-breadth-seg.is-up {
+  justify-content: flex-start;
+  background: rgba(var(--up-rgb), 0.32);
+  color: var(--up);
+}
+
+.ws-breadth-seg.is-down {
+  justify-content: flex-end;
+  background: rgba(var(--down-rgb), 0.32);
+  color: var(--down);
+}
+
+.ws-breadth-legend {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-12);
+  margin-top: var(--s-8);
+}
+
+.ws-breadth-mid {
+  color: var(--text-mute);
+}
+
+.ws-breadth-mid b {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ws-breadth-dot {
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+.ws-mv-head,
+.ws-mv-row {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) 6.5rem 4.75rem minmax(56px, 5rem);
+  align-items: center;
+  gap: var(--s-12);
+}
+
+.ws-mv-head {
+  padding-bottom: var(--s-12);
+  border-bottom: 1px solid var(--line);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.ws-mv-row {
+  padding: var(--s-12) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ws-mv-row:last-child {
+  border-bottom: none;
+}
+
+.ws-mv-id {
+  display: flex;
+  align-items: center;
+  gap: var(--s-12);
+  min-width: 0;
+}
+
+.ws-mv-px,
+.ws-mv-chg {
+  text-align: right;
+}
+
+.ws-mv-chg {
+  font-weight: 600;
+}
+
+.ws-mv-plot {
+  position: relative;
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.ws-mv-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 6px;
+  min-width: 3px;
+  border-radius: 3px;
+}
+
+.ws-mv-fill.is-up {
+  background: var(--up);
+}
+
+.ws-mv-fill.is-down {
+  background: var(--down);
+}
+
+@media (max-width: 1400px) {
+  .ws-mv-head > :nth-child(3),
+  .ws-mv-row > :nth-child(3) {
+    display: none;
+  }
+
+  .ws-mv-head,
+  .ws-mv-row {
+    grid-template-columns: 1.5rem minmax(0, 1fr) 4.75rem minmax(48px, 4rem);
+  }
+}
+
+/* ----------------------------------------------------------- Breakouts */
+
+/* Holding vs faded is carried by the tag text alone. An edge stripe was tried
+   and dropped: on a card this small it read as an artifact rather than a
+   status, and the tag already says the same thing in words. */
+
+.ws-bo-tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ws-bo-tag.is-hold {
+  color: var(--up);
+}
+
+.ws-bo-tag.is-fade {
+  color: var(--text-mute);
+}
+
+.ws-bo-track {
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--bg-sunk);
+}
+
+/* The stretch from the cleared level up to the day's high. */
+.ws-bo-span {
+  position: absolute;
+  top: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(var(--up-rgb), 0.35);
+}
+
+.ws-bo-level {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text-faint);
+}
+
+.ws-bo-dot {
+  position: absolute;
+  top: 2px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.ws-bo-foot.is-plain {
+  padding-top: 0;
+  border-top: none;
+  color: var(--text-mute);
+}
+
+
+
+/* --- Sector heatmap: a diverging ramp with a neutral midpoint. Each arm was
+   checked for monotone OKLCH lightness, adjacent ΔL >= 0.06 and >= 4.5:1
+   contrast against its ink. Sign is never carried by hue alone. */
+.ws {
+  --hm-ink: #171a1c;
+  --hm-0: #edeeea;
+  --hm-n1: #f0bcb9;
+  --hm-n2: #de8884;
+  --hm-n3: #cd625d;
+  --hm-p1: #c2e4a2;
+  --hm-p2: #96cb72;
+  --hm-p3: #63ad4e;
+}
+
+[data-theme='dark'] .ws {
+  --hm-ink: #f3f4f1;
+  --hm-0: #2a2f31;
+  --hm-n1: #6d2529;
+  --hm-n2: #942d31;
+  --hm-n3: #bf413c;
+  --hm-p1: #1f4d2f;
+  --hm-p2: #16673a;
+  --hm-p3: #0f7d42;
+}
+
+/* The treemap canvas. Tiles are absolutely positioned in percentages from the
+   squarified layout, so the whole map scales with the container. */
+.ws-tm {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  min-height: 340px;
+}
+
+.ws-tm-tile {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px;
+  overflow: hidden;
+  /* The gap between tiles is a border, not a grid gutter — the rectangles tile
+     the box exactly, so any real gap would break the area encoding. */
+  border: 2px solid var(--surface);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--hm-ink);
+  transition:
+    filter 0.2s var(--ease),
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.ws-tm-tile[data-band='0'],
+.ws-hm-swatches i[data-band='0'] {
+  background: var(--hm-0);
+}
+
+.ws-tm-tile[data-band='n1'],
+.ws-hm-swatches i[data-band='n1'] {
+  background: var(--hm-n1);
+}
+
+.ws-tm-tile[data-band='n2'],
+.ws-hm-swatches i[data-band='n2'] {
+  background: var(--hm-n2);
+}
+
+.ws-tm-tile[data-band='n3'],
+.ws-hm-swatches i[data-band='n3'] {
+  background: var(--hm-n3);
+}
+
+.ws-tm-tile[data-band='p1'],
+.ws-hm-swatches i[data-band='p1'] {
+  background: var(--hm-p1);
+}
+
+.ws-tm-tile[data-band='p2'],
+.ws-hm-swatches i[data-band='p2'] {
+  background: var(--hm-p2);
+}
+
+.ws-tm-tile[data-band='p3'],
+.ws-hm-swatches i[data-band='p3'] {
+  background: var(--hm-p3);
+}
+
+/* Spotlight: recede every tile but the hovered one. On a packed layout there
+   is no gap around a tile for a highlight to register against. */
+.ws-tm:hover .ws-tm-tile {
+  filter: saturate(0.6) brightness(0.72);
+}
+
+.ws-tm .ws-tm-tile:hover {
+  z-index: 2;
+  filter: none;
+  /* Scales up rather than lifting: the rectangles tile the box exactly, so
+     there is nowhere to lift into — growing slightly over the neighbours is
+     the only move that reads. */
+  transform: scale(1.018);
+  box-shadow: var(--slab-shadow-hi);
+}
+
+.ws-tm-tile:hover .ws-tm-spark-line {
+  opacity: 0.85;
+  stroke-width: 2;
+}
+
+.ws-tm-tile:hover .ws-tm-wt {
+  opacity: 0.9;
+}
+
+.ws-tm-tile[data-active] {
+  border-color: var(--hm-ink);
+}
+
+.ws-tm-tile:focus-visible {
+  outline: 2px solid var(--hm-ink);
+  outline-offset: -6px;
+}
+
+/* flex: none on every child. Without it a short tile shrinks its children along
+   the column axis and the name collapses to zero height — the tile renders as a
+   bare number with no label. */
+.ws-tm-name,
+.ws-tm-val,
+.ws-tm-wt {
+  flex: none;
+}
+
+.ws-tm-name {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ws-tm-val {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  opacity: 0.92;
+}
+
+/* Weight is only readable from area to within a rough guess, so the big tiles
+   state it. Small ones keep it in the tooltip. */
+.ws-tm-wt {
+  margin-top: 2px;
+  opacity: 0.62;
+  color: inherit;
+}
+
+/* Drawn in the tile's own ink so it survives every band of the ramp. */
+.ws-tm-spark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 42%;
+  pointer-events: none;
+}
+
+.ws-tm-spark-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  transition:
+    opacity 0.2s var(--ease),
+    stroke-width 0.2s var(--ease);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.ws-tm-spark-zero {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  opacity: 0.22;
+  vector-effect: non-scaling-stroke;
+}
+
+.ws-tm-tile[data-size='lg'] .ws-tm-name { font-size: 1rem; }
+.ws-tm-tile[data-size='lg'] .ws-tm-val { font-size: 1.75rem; }
+.ws-tm-tile[data-size='md'] .ws-tm-name { font-size: 0.8125rem; }
+.ws-tm-tile[data-size='md'] .ws-tm-val { font-size: 1.125rem; }
+
+.ws-tm-tile[data-size='sm'] {
+  padding: 6px 8px;
+}
+
+.ws-tm-tile[data-size='sm'] .ws-tm-name { font-size: 0.6875rem; }
+.ws-tm-tile[data-size='sm'] .ws-tm-val { font-size: 0.75rem; }
+
+/* Below the large tiles there is no room for a trend or a weight caption
+   without crowding the figure that matters. */
+.ws-tm-tile[data-size='md'] .ws-tm-wt,
+.ws-tm-tile[data-size='sm'] .ws-tm-wt,
+.ws-tm-tile[data-size='xs'] .ws-tm-wt,
+.ws-tm-tile[data-size='sm'] .ws-tm-spark,
+.ws-tm-tile[data-size='xs'] .ws-tm-spark {
+  display: none;
+}
+
+.ws-tm-tile[data-size='md'] .ws-tm-spark {
+  height: 34%;
+  opacity: 0.8;
+}
+
+/* Too small for type: the tile falls back to colour alone, and the label is
+   still reachable by tooltip and by screen reader via aria-label. */
+.ws-tm-tile[data-size='xs'] .ws-tm-name,
+.ws-tm-tile[data-size='xs'] .ws-tm-val {
+  display: none;
+}
+
+.ws-hm-scale {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-12);
+  margin-top: var(--s-16);
+}
+
+.ws-hm-swatches {
+  display: flex;
+  gap: 2px;
+}
+
+.ws-hm-swatches i {
+  width: 26px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-tm .ws-tm-tile:hover {
+    transform: none;
+  }
+}
+
+/* The map gets taller as it narrows, so tiles keep usable proportions instead
+   of collapsing into slivers. */
+@media (max-width: 1100px) {
+  .ws-tm {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (max-width: 760px) {
+  .ws-tm {
+    aspect-ratio: 4 / 5;
+    min-height: 420px;
+  }
+}
+
+/* The map gets taller as it narrows, so tiles keep usable proportions instead
+   of collapsing into slivers. */
+

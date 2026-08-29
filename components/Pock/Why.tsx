@@ -1,3 +1,4 @@
+import { TiltCard } from './TiltCard';
 import {
   Activity,
   Calculator,
@@ -56,13 +57,13 @@ export function Why() {
             {tools.map((tool) => {
               const Icon = ICONS[tool.icon];
               return (
-                <div key={tool.name} className="why-card">
+                <TiltCard key={tool.name} className="why-card">
                   <span className="why-icon" aria-hidden="true">
                     <Icon size={19} />
                   </span>
                   <h3 className="why-name">{tool.name}</h3>
                   <p className="why-body">{tool.body}</p>
-                </div>
+                </TiltCard>
               );
             })}
           </div>

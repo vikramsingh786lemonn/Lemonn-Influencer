@@ -9,9 +9,13 @@
 
 const IN = 'en-IN';
 
-/** A price, grouped Indian-style: `₹1,23,456.7` */
+/** A price, grouped Indian-style: `₹1,23,456.70`. Fixed to two decimals —
+    `maximumFractionDigits` drops trailing zeroes and leaves columns ragged. */
 export function inr(n: number): string {
-  return `₹${n.toLocaleString(IN, { maximumFractionDigits: 1 })}`;
+  return `₹${n.toLocaleString(IN, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 /** A plain grouped number, no unit: `24,238.5` */

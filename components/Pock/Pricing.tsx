@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { TiltCard } from './TiltCard';
 import { ArrowRight, Check, ShieldOff, Smartphone, Sparkles } from 'lucide-react';
 import { AuthCta } from './Login/AuthCta';
 import { Reveal } from './Motion';
@@ -24,7 +25,7 @@ export function Pricing() {
 
         <Reveal delay={0.08}>
           <div className="price-grid">
-            <article className="price-card is-lead">
+            <TiltCard as="article" className="price-card is-lead" maxTilt={4}>
               <p className="price-eyebrow">{plan.eyebrow}</p>
 
               <p className="price-figure">
@@ -52,9 +53,9 @@ export function Pricing() {
                   <ArrowRight size={16} aria-hidden="true" />
                 </Link>
               </div>
-            </article>
+            </TiltCard>
 
-            <article className="price-card is-offer">
+            <TiltCard as="article" className="price-card is-offer" maxTilt={4}>
               <p className="price-ribbon">
                 <Sparkles size={13} aria-hidden="true" />
                 {promo.ribbon}
@@ -95,7 +96,7 @@ export function Pricing() {
                   <ArrowRight size={16} aria-hidden="true" />
                 </AuthCta>
               </div>
-            </article>
+            </TiltCard>
           </div>
         </Reveal>
 

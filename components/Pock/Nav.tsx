@@ -21,7 +21,10 @@ export function Nav() {
   const burgerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80);
+    // Hysteresis: a single threshold flips back and forth on the tiniest scroll
+    // wobble, which reads as the page shaking.
+    const onScroll = () =>
+      setScrolled((was) => (was ? window.scrollY > 40 : window.scrollY > 80));
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);

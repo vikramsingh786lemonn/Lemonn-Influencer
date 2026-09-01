@@ -1923,7 +1923,8 @@ body:has(.pk) {
 }
 
 .pin-shot img,
-.pin-inline-shot img {
+.pin-inline-shot img,
+.scanner-card-image img {
   -webkit-mask-image: var(--shot-fade);
   mask-image: var(--shot-fade);
   -webkit-mask-composite: source-in;
@@ -2005,6 +2006,185 @@ body:has(.pk) {
   background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.85) 0%, transparent 72%);
 }
 
+/* Mobile scanner carousel — one card per module, in a proper block surface */
+.mobile-scanners {
+  display: none;
+}
+
+.scanner-carousel {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+}
+
+.scanner-carousel-card {
+  display: none;
+  flex-direction: column;
+  gap: var(--s-16);
+  padding: var(--s-32) var(--s-24) var(--s-24);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.06),
+    0 4px 10px -4px rgba(0, 0, 0, 0.12),
+    0 24px 48px -28px rgba(20, 68, 25, 0.28);
+  overflow: hidden;
+}
+
+[data-theme='dark'] .pk .scanner-carousel-card {
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.2),
+    0 4px 10px -4px rgba(0, 0, 0, 0.32),
+    0 24px 48px -26px rgba(0, 0, 0, 0.55);
+}
+
+.scanner-carousel-card.is-active {
+  display: flex;
+}
+
+.scanner-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+}
+
+.scanner-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.scanner-card-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text);
+}
+
+.scanner-card-body {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--text-mute);
+  /* Reserves room for the longest description (Insider Strategy, ~4 lines)
+     so every card is the same height whether its own copy is 2 lines or 4. */
+  min-height: 6em;
+}
+
+/* Always a single row, however many chips a module has (3 vs Insider
+   Strategy's 5) — wrapping to 2–3 lines was the main reason card heights
+   didn't match. Overflow scrolls horizontally instead of growing the card. */
+/* Wraps rather than scrolling sideways. It was nowrap + overflow-x with the
+   scrollbar hidden, so the last chip was sliced with nothing to show it could
+   be scrolled. Three or four short chips fit two rows. */
+.scanner-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scanner-card-chips li {
+  max-width: 100%;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--bg-sunk);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-mute);
+}
+
+.scanner-card-image {
+  position: relative;
+  margin-top: var(--s-8);
+  border-radius: var(--r-panel);
+  background: var(--bg-sunk);
+  overflow: hidden;
+}
+
+.scanner-card-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Prev/next + tap-to-jump progress track, replaces the old giant numbered
+   dots (whose connector line only spanned 35% of the row and looked broken). */
+.scanner-nav {
+  display: none;
+  align-items: center;
+  gap: var(--s-12);
+  margin-top: var(--s-24);
+}
+
+.scanner-arrow {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease),
+    color 0.2s var(--ease), transform 0.16s var(--ease);
+}
+
+.scanner-arrow:hover {
+  background: var(--pear);
+  border-color: var(--pear);
+  color: var(--grass);
+}
+
+.scanner-arrow:active {
+  transform: scale(0.94);
+}
+
+.scanner-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  flex: 1;
+}
+
+.scanner-progress-seg {
+  flex: 1;
+  height: 5px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--line);
+  cursor: pointer;
+  transition: background 0.24s var(--ease);
+}
+
+.scanner-progress-seg.is-done,
+.scanner-progress-seg.is-active {
+  background: var(--pear);
+}
+
+.pk .scanner-step-label {
+  margin: var(--s-12) 0 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 1023px) {
   .pin-band {
     --rail-indent: 0px;
@@ -2012,34 +2192,30 @@ body:has(.pk) {
   .pin,
   .pin-inner {
     height: auto;
+    display: none;
   }
   .pin-inner {
     position: static;
-    display: block;
     overflow: visible;
   }
   .pin-mark {
     display: none;
   }
   .pin-grid {
-    grid-template-columns: 1fr;
-    gap: 0;
+    display: none;
   }
   .pin-stage {
     display: none;
   }
-  .pin-inline-shot {
+  .mobile-scanners {
     display: block;
-    max-width: none;
+    margin-top: var(--s-32);
   }
-  .pin-steps {
-    gap: var(--s-56);
+  .scanner-carousel {
+    display: flex;
   }
-  .pin-step {
-    opacity: 1;
-  }
-  .pin-step:not(:last-child)::before {
-    display: none;
+  .scanner-nav {
+    display: flex;
   }
 }
 

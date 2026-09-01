@@ -3,11 +3,100 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { SCANNERS } from './content';
 
 const EASE = [0.16, 1, 0.3, 1] as const;
+
+function MobileScannersCarousel({ scanners }: { scanners: typeof SCANNERS }) {
+  const [active, setActive] = useState(0);
+  const total = scanners.length;
+
+  const goTo = (index: number) => {
+    setActive(((index % total) + total) % total);
+  };
+
+  return (
+    <div className="mobile-scanners">
+      <div className="wrap">
+        <div className="scanner-carousel">
+          {scanners.map((scanner, i) => (
+            <div
+              key={scanner.id}
+              className={`scanner-carousel-card ${i === active ? 'is-active' : ''}`}
+              style={{
+                display: i === active ? 'flex' : 'none'
+              }}
+            >
+              <div className="scanner-card-header">
+                <p className="scanner-label">{scanner.name}</p>
+                <h3 className="scanner-card-title">{scanner.title}</h3>
+              </div>
+              <p className="scanner-card-body">{scanner.body}</p>
+              <ul className="scanner-card-chips">
+                {scanner.chips.map((chip) => (
+                  <li key={chip}>{chip}</li>
+                ))}
+              </ul>
+              <div className="scanner-card-image">
+                <span className="scan-ground" aria-hidden="true" />
+                <Image
+                  src={scanner.image}
+                  alt={`${scanner.name} on desktop and mobile. Illustrative data.`}
+                  width={1536}
+                  height={1024}
+                  sizes="100vw"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Prev / next + jump-to-step navigation */}
+        <div className="scanner-nav">
+          <button
+            type="button"
+            className="scanner-arrow"
+            onClick={() => goTo(active - 1)}
+            aria-label="Previous scanner"
+          >
+            <ChevronLeft size={18} aria-hidden="true" />
+          </button>
+
+          <div className="scanner-progress" role="tablist" aria-label="Scanner modules">
+            {scanners.map((scanner, i) => (
+              <button
+                key={scanner.id}
+                type="button"
+                role="tab"
+                aria-selected={i === active}
+                aria-label={`Go to ${scanner.name}`}
+                className={`scanner-progress-seg ${i === active ? 'is-active' : ''} ${
+                  i < active ? 'is-done' : ''
+                }`}
+                onClick={() => goTo(i)}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="scanner-arrow"
+            onClick={() => goTo(active + 1)}
+            aria-label="Next scanner"
+          >
+            <ChevronRight size={18} aria-hidden="true" />
+          </button>
+        </div>
+
+        <p className="scanner-step-label micro">
+          {String(active + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function Scanners() {
   const [active, setActive] = useState(0);
@@ -53,6 +142,9 @@ export function Scanners() {
           </p>
         </div>
       </div>
+
+      {/* Mobile carousel view - Zing-style stepped navigation */}
+      <MobileScannersCarousel scanners={SCANNERS} />
 
       <div className="pin" style={{ '--steps': SCANNERS.length } as React.CSSProperties}>
         {SCANNERS.map((scanner, i) => (
